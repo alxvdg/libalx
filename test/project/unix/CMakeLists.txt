@@ -14,6 +14,6 @@ add_executable(tests ${SRC})
 
 target_link_libraries(tests PRIVATE alxlib m)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wshadow -Wmissing-prototypes -Wstrict-prototypes")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Wextra -Wshadow -Wmissing-prototypes -Wstrict-prototypes")
 
 set(CMAKE_BUILD_TYPE Debug)

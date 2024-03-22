@@ -22,7 +22,6 @@
 // Personal library headers
 #include <dlist.h>
 #include <slist.h>
-#include <mergesort.h>
 
 //----------------------------------------------------------------------------//
 //- Macro definitions                                                        -//

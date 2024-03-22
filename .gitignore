@@ -1,0 +1,5 @@
+# ignore these files
+
+code/project/unix/*
+test/project/unix/*
+.vscode/

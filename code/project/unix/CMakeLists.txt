@@ -12,6 +12,6 @@ add_library(
 	alxlib STATIC ${SRC}
 	${PROJECT_SOURCE_DIR}/../../bin/)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wshadow -Wmissing-prototypes -Wstrict-prototypes")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -g -Wextra -Wshadow -Wmissing-prototypes -Wstrict-prototypes")
 
 set(CMAKE_BUILD_TYPE Debug)

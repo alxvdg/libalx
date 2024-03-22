@@ -16,43 +16,42 @@
 /*!
  * List node.
  */
-typedef struct _Slist_node
+typedef struct _slist_node
 {
     void                    *pData;             /*!< Data to handle. */
-    struct _Slist_node      *pNext;             /*!< Next node. */
-} SList_node;
+    struct _slist_node      *pNext;             /*!< Next node. */
+} slist_node;
 
-typedef struct _Slist_node Slist_node;
+typedef struct _slist_node slist_node;
 
 /*!
  * List.
  */
-typedef struct _Slist
+typedef struct _slist
 {
-    Slist_node               *pHead;            /*!< Head of the list. */
-    Slist_node               *pTail;            /*!< Tail of the list. */
-    size_t                    nodeSize;         /*!< Size of one node. */
+    slist_node               *pHead;            /*!< Head of the list. */
+    slist_node               *pTail;            /*!< Tail of the list. */
     size_t                    nrNodes;          /*!< Number of nodes in the list. */
-} Slist;
+} slist;
 
 //----------------------------------------------------------------------------//
 //- Public functions                                                         -//
 //----------------------------------------------------------------------------//
 
 /*!
- * Construct a simple list.
+ * Initialize a new list.
  *
- * \param[in]   pList               List to construct.
  * \param[in]   nodeSize            Node size.
+ * \return                          Pointer to a new list.
  */
-void slist_construct(Slist *pList, size_t nodeSize);
+slist* slist_init(void);
 
 /*!
  * Destroy a list.
  *
  * \param[in]   pList               List to destroy.
  */
-void slist_destroy(Slist *pList);
+void slist_destroy(slist *pList);
 
 /*!
  * Push a node on the head of the list.
@@ -60,7 +59,7 @@ void slist_destroy(Slist *pList);
  * \param[in]   pList               List.
  * \param[in]   pData               Data to push.
  */
-void slist_pushHead(Slist *pList, void *pData);
+void slist_pushHead(slist *pList, void *pData);
 
 /*!
  * Push a node on the tail of the list.
@@ -68,13 +67,14 @@ void slist_pushHead(Slist *pList, void *pData);
  * \param[in]   pList               List.
  * \param[in]   pData               Data to push.
  */
-void slist_pushTail(Slist *pList, void *pData);
+void slist_pushTail(slist *pList, void *pData);
+
 /*!
  * Pop a node from the list.
  *
  * \param[in]   pList               List.
- * \param[out]  pData               Data to pop.
+ * \return                          Data to pop.
  */
-void slist_pop(Slist *pList, void *pData);
+void *slist_pop(slist *pList);
 
 #endif // SLIST_H

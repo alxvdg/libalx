@@ -16,46 +16,44 @@
 /*!
  * List node.
  */
-typedef struct _Dlist_node
+typedef struct _dlist_node
 {
     void                    *pData;             /*!< Data to handle. */
-    struct _Dlist_node      *pNext;             /*!< Next node. */
-    struct _Dlist_node      *pPrev;             /*!< Previous node. */
-} DList_node;
+    struct _dlist_node      *pNext;             /*!< Next node. */
+    struct _dlist_node      *pPrev;             /*!< Previous node. */
+} dlist_node;
 
-typedef struct _Dlist_node Dlist_node;
+typedef struct _dlist_node dlist_node;
 
 /*!
  * List.
  */
-typedef struct _Dlist
+typedef struct _dlist
 {
-    Dlist_node               *pHead;            /*!< Head of the list. */
-    Dlist_node               *pTail;            /*!< Tail of the list. */
-    size_t                    nodeSize;         /*!< Size of one node. */
+    dlist_node               *pHead;            /*!< Head of the list. */
+    dlist_node               *pTail;            /*!< Tail of the list. */
     size_t                    nrNodes;          /*!< Number of nodes in the list. */
-} Dlist;
+} dlist;
 
-//typedef int (*MergesortCmpFn)(Dlist_node *pNodeA, Dlist_node *pNodeB);
+typedef int (*DListCmpFn)(const void *pA, const void *pB);
 
 //----------------------------------------------------------------------------//
 //- Public functions                                                         -//
 //----------------------------------------------------------------------------//
 
 /*!
- * Construct a simple list.
+ * Initialize a double list.
  *
- * \param[in]   pList               List to construct.
- * \param[in]   nodeSize            Node size.
+ * \return                          Initialized list .
  */
-void dlist_construct(Dlist *pList, size_t nodeSize);
+dlist *dlist_init(void);
 
 /*!
  * Destroy a list.
  *
  * \param[in]   pList               List to destroy.
  */
-void dlist_destroy(Dlist *pList);
+void dlist_destroy(dlist *pList);
 
 /*!
  * Push a node on the head of the list.
@@ -63,7 +61,7 @@ void dlist_destroy(Dlist *pList);
  * \param[in]   pList               List.
  * \param[in]   pData               Data to push.
  */
-void dlist_pushHead(Dlist *pList, void *pData);
+void dlist_pushHead(dlist *pList, void *pData);
 
 /*!
  * Push a node on the tail of the list.
@@ -71,23 +69,39 @@ void dlist_pushHead(Dlist *pList, void *pData);
  * \param[in]   pList               List.
  * \param[in]   pData               Data to push.
  */
-void dlist_pushTail(Dlist *pList, void *pData);
+void dlist_pushTail(dlist *pList, void *pData);
+
+/*!
+ * Insert a node at the given index.
+ *
+ * \param[in]   pList               List.
+ * \param[in]   pData               Data to insert.
+ * \param[in]   index               Index.
+ */
+void dlist_insert(dlist *pList, void *pData, size_t index);
 
 /*!
  * Pop the head node from the list.
  *
  * \param[in]   pList               List.
- * \param[out]  pData               Data to pop.
+ * \return                          Popped data.
  */
-void dlist_popHead(Dlist *pList, void *pData);
+void *dlist_popHead(dlist *pList);
 
 /*!
  * Pop the tail node from the list.
  *
  * \param[in]   pList               List.
- * \param[out]  pData               Data to pop.
+ * \return                          Popped data.
  */
-void dlist_popTail(Dlist *pList, void *pData);
+void *dlist_popTail(dlist *pList);
+
+/*!
+ * Print all data of the list.
+ *
+ * \param[in]   pList               List.
+ */
+void printList(dlist *pList);
 
 /*!
  * Split one list into two list.
@@ -98,7 +112,7 @@ void dlist_popTail(Dlist *pList, void *pData);
  * \param[in]   pDstList            Destination list.
  * \param[in]   nrNodes             nrNodes.
  */
-void dlist_split(Dlist *pSrcList, Dlist *pDstList);
+void dlist_split(dlist *pSrcList, dlist *pDstList);
 
 /*!
  * Join src list at the end of dst list.
@@ -107,6 +121,16 @@ void dlist_split(Dlist *pSrcList, Dlist *pDstList);
  * \param[in]   pDstList            Destination list.
  * \param[in]   nrNodes             nrNodes.
  */
-void dlist_join(Dlist *pDstList, Dlist *pSrcList);
+void dlist_join(dlist *pDstList, dlist *pSrcList);
+
+/*!
+ * Sort the list according to the given comparison function.
+ *
+ * Sort the list with the stable mergesort algorithm.
+ *
+ * \param[in]   pList               List to sort.
+ * \param[in]   compare             Comparison function.
+ */
+void dlist_sort(dlist *pList, DListCmpFn compare);
 
 #endif // DLIST_H

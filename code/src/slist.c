@@ -9,124 +9,75 @@
 //----------------------------------------------------------------------------//
 
 /*!
- * Return the head of the list.
+ * Initialize a node.
  *
- * \param[in]   pList           List.
- * \return                      Head of the list.
- */
-static Slist_node *slist_head(Slist *pList)
-{
-    assert(pList);
-
-    return pList->pHead;
-}
-
-/*!
- * Return the number of nodes within the list.
- *
- * \param[in]   pList           List.
- * \return                      Number of nodes.
- */
-static size_t slist_nrNodes(Slist *pList)
-{
-    assert(pList);
-
-    return pList->nrNodes;
-}
-
-/*!
- * Construct a node.
- *
- * \param[in]   nodeSize                Node size, in bytes.
  * \param[in]   pData                   Data node.
  * \param[in]   pNext                   Next node, can be NULL.
  * \return                              Constructed node.
  */
-static Slist_node *slist_node_construct(size_t nodeSize, void *pData, Slist_node *pNext)
+static slist_node *slist_node_init(void *pData)
 {
-    Slist_node          *pNode;
+    slist_node          *pNode;
 
     assert(pData);
 
-    pNode           = malloc(sizeof(Slist_node));
-
-    pNode->pData    = malloc(nodeSize);
-    memcpy(pNode->pData, pData, nodeSize);
-
-    pNode->pNext    = pNext;
+    pNode           = malloc(sizeof(slist_node));
+    pNode->pData    = pData;
+    pNode->pNext    = NULL;
 
     return pNode;
-}
-
-/*!
- * Return the next node of a node.
- *
- * \param[in]   pNode               Node.
- * \return                          Next node, may be NULL.
- */
-static Slist_node *slist_node_next(Slist_node *pNode)
-{
-    assert(pNode);
-
-    return pNode->pNext;
-}
-
-/*!
- * Return the data of a node.
- *
- * \param[in]   pNode               Node.
- * \param[out]  pData               Data.
- */
-static void slist_node_data(Slist_node *pNode, void *pData)
-{
-    assert(pNode);
-    assert(pData);
-
-    pData = pNode->pData;
 }
 
 //----------------------------------------------------------------------------//
 //- Public functions                                                         -//
 //----------------------------------------------------------------------------//
 
-void slist_construct(Slist *pList, size_t nodeSize)
+slist* slist_init(void)
 {
-    assert(pList);
-    assert(nodeSize > 0);
+    slist *pList = (slist*) malloc(sizeof(slist));
 
     pList->pHead        = NULL;
     pList->pTail        = NULL;
-    pList->nodeSize     = nodeSize;
     pList->nrNodes      = 0;
+
+    return pList;
 }
 
-void slist_destroy(Slist *pList)
+void slist_destroy(slist *pList)
 {
-    Slist_node      *pCurrent;
+    slist_node      *pCurrent;
 
-    assert(pList);
+    if (!pList)
+    {
+        return;
+    }
 
     while (pList->pHead)
     {
         pCurrent = pList->pHead;
         pList->pHead = pCurrent->pNext;
 
-        free(pCurrent->pData);
         free(pCurrent);
     }
+
+    free(pList);
 }
 
-void slist_pushHead(Slist *pList, void *pData)
+void slist_pushHead(slist *pList, void *pData)
 {
-    Slist_node      *pNode;
+    slist_node      *pNode;
 
-    assert(pList);
+    if (!pList)
+    {
+        return;
+    }
 
-    pNode = slist_node_construct(pList->nodeSize, pData, pList->pHead);
+    pNode = slist_node_init(pData);
 
+    pNode->pNext    = pList->pHead;
     pList->pHead    = pNode;
 
-    if (slist_nrNodes(pList) == 0)
+    if (pList->nrNodes == 0)
     {
         pList->pTail = pNode;
     }
@@ -134,43 +85,54 @@ void slist_pushHead(Slist *pList, void *pData)
     pList->nrNodes++;
 }
 
-void slist_pushTail(Slist *pList, void *pData)
+void slist_pushTail(slist *pList, void *pData)
 {
-    Slist_node      *pNode;
+    slist_node      *pNode;
 
-    assert(pList);
-
-    pNode = slist_node_construct(pList->nodeSize, pData, NULL);
-
-    if (slist_nrNodes(pList) == 0)
+    if (!pList)
     {
-        pList->pHead            = pNode;
-        pList->pTail            = pNode;
+        return;
+    }
+
+    pNode = slist_node_init(pData);
+
+    if (pNode)
+    {
+        if (pList->nrNodes == 0)
+        {
+            pList->pHead            = pNode;
+            pList->pTail            = pNode;
+        }
+        else
+        {
+            pList->pTail->pNext     = pNode;
+            pList->pTail            = pNode;
+        }
+
+        pList->nrNodes++;
+    }
+}
+
+void *slist_pop(slist *pList)
+{
+    void*           *pData;
+
+    if (!pList || pList->nrNodes == 0)
+    {
+        pData = NULL;
     }
     else
     {
-        pList->pTail->pNext     = pNode;
-        pList->pTail            = pNode;
+        slist_node      *pHead;
+    
+        pHead = pList->pHead;
+        pData = pHead->pData;
+
+        pList->pHead = pHead->pNext;
+        pList->nrNodes--;
+
+        free(pHead);
     }
 
-    pList->nrNodes++;
-}
-
-void slist_pop(Slist *pList, void *pData)
-{
-    Slist_node      *pHead;
-
-    assert(pList);
-    assert(pList->pHead);
-    assert(pData);
-
-    pHead = slist_head(pList);
-    memcpy(pData, pHead->pData, pList->nodeSize);
-    slist_node_data(pHead, pData);
-
-    pList->pHead = slist_node_next(pHead);
-    pList->nrNodes--;
-
-    free(pHead->pData);
-    free(pHead);
+    return pData;
 }

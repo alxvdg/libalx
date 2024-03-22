@@ -9,175 +9,144 @@
 //----------------------------------------------------------------------------//
 
 /*!
- * Return the head of the list.
+ * Initialize a node.
  *
- * \param[in]   pList           List.
- * \return                      Head of the list.
- */
-static Dlist_node *dlist_head(Dlist *pList)
-{
-    assert(pList);
-
-    return pList->pHead;
-}
-
-/*!
- * Return the tail of the list.
- *
- * \param[in]   pList           List.
- * \return                      Head of the list.
- */
-static Dlist_node *dlist_tail(Dlist *pList)
-{
-    assert(pList);
-
-    return pList->pTail;
-}
-
-/*!
- * Return the number of nodes within the list.
- *
- * \param[in]   pList           List.
- * \return                      Number of nodes.
- */
-static size_t dlist_nrNodes(Dlist *pList)
-{
-    assert(pList);
-
-    return pList->nrNodes;
-}
-
-/*!
- * Construct a node.
- *
- * \param[in]   nodeSize                Node size, in bytes.
  * \param[in]   pData                   Data node.
- * \param[in]   pNext                   Next node, can be NULL.
- * \param[in]   pPrev                   Previous node, can be NULL.
- * \return                              Constructed node.
+ * \return                              Initialized node.
  */
-static Dlist_node *dlist_node_construct(size_t nodeSize, void *pData, Dlist_node *pNext, Dlist_node *pPrev)
+static dlist_node *dlist_node_init(void *pData)
 {
-    Dlist_node          *pNode;
+    dlist_node          *pNode;
 
-    assert(pData);
-
-    pNode           = malloc(sizeof(Dlist_node));
-
-    pNode->pData    = malloc(nodeSize);
-    memcpy(pNode->pData, pData, nodeSize);
-
-    pNode->pNext    = pNext;
-    pNode->pPrev    = pPrev;
+    if (pData == NULL)
+    {
+        pNode = NULL;
+    }
+    else
+    {
+        pNode           = malloc(sizeof(dlist_node));
+        pNode->pData    = pData;
+        pNode->pNext    = NULL;
+        pNode->pPrev    = NULL;
+    }
 
     return pNode;
-}
-
-
-
-/*!
- * Return the next node of a node.
- *
- * \param[in]   pNode               Node.
- * \return                          Next node, may be NULL.
- */
-static Dlist_node *dlist_node_next(Dlist_node *pNode)
-{
-    assert(pNode);
-
-    return pNode->pNext;
-}
-
-/*!
- * Return the previous node of a node.
- *
- * \param[in]   pNode               Node.
- * \return                          Next node, may be NULL.
- */
-static Dlist_node *dlist_node_prev(Dlist_node *pNode)
-{
-    assert(pNode);
-
-    return pNode->pPrev;
-}
-
-/*!
- * Return the data of a node.
- *
- * \param[in]   pNode               Node.
- * \param[out]  pData               Data.
- */
-static void dlist_node_data(Dlist_node *pNode, void *pData)
-{
-    assert(pNode);
-    assert(pData);
-
-    pData = pNode->pData;
 }
 
 /*!
  * Get the 'index' node of the list from the head.
  *
+ * Get just a node according to the given index.
+ * Do no take the node from the list. The ownership of the node
+ * still belongs to the list.
+ *
  * \param[in]   pList               List.
- * \param[in]	index		    Node index within the list.
+ * \param[in]	index		        Node index within the list.
  * \return                          Index node, may be NULL.
  */
-static Dlist_node *dlist_getNode(Dlist *pList, size_t index)
+static dlist_node *dlist_getNode(dlist *pList, size_t index)
 {
-    Dlist_node          *pNode;
+    dlist_node          *pNode;
 
-    assert(pList);
+    if (!pList)
+    {
+        return NULL;
+    }
 
-    pNode = dlist_head(pList);
+    pNode = pList->pHead;
 
     for (size_t i = 1; i < index; i++)
     {
-	pNode = dlist_node_prev(pNode);
+	    pNode = pNode->pPrev;
     }
     
     return pNode;
 }
 
-//----------------------------------------------------------------------------//
-//- Public functions                                                         -//
-//----------------------------------------------------------------------------//
-
-void dlist_construct(Dlist *pList, size_t nodeSize)
+/*!
+ * Take the node at the head of the list.
+ *
+ * Do not free the node, the ownership of the returned node
+ * is pass from the list to the caller.
+ *
+ * It is the responsability of the caller to free the node
+ * correctly.
+ *
+ * \param[in]   pList               List.
+ * \return                          Head node, may be NULL.
+ */
+static dlist_node *dlist_takeHead(dlist *pList)
 {
-    assert(pList);
-    assert(nodeSize > 0);
+    dlist_node      *pHead;
 
-    pList->pHead        = NULL;
-    pList->pTail        = NULL;
-    pList->nodeSize     = nodeSize;
-    pList->nrNodes      = 0;
-}
-
-void dlist_destroy(Dlist *pList)
-{
-    Dlist_node      *pCurrent;
-
-    assert(pList);
-
-    while (pList->pHead)
+    if (pList == NULL || pList->nrNodes == 0)
     {
-        pCurrent = pList->pHead;
-        pList->pHead = pCurrent->pNext;
-
-        free(pCurrent->pData);
-        free(pCurrent);
+        pHead = NULL;
     }
+    else
+    {
+        pHead = pList->pHead;
+
+        pList->pHead = pHead->pPrev;
+        pList->nrNodes--;
+    }
+
+    return pHead;
 }
 
-void dlist_pushHead(Dlist *pList, void *pData)
+/*!
+ * Take the node at the tail of the list.
+ *
+ * Do not free the node, the ownership of the returned node
+ * is pass from the list to the caller.
+ *
+ * It is the responsability of the caller to free the node
+ * correctly.
+ *
+ * \param[in]   pList               List.
+ * \return                          Tail node, may be NULL.
+ */
+static dlist_node *dlist_takeTail(dlist *pList)
 {
-    Dlist_node      *pNode;
+    dlist_node      *pTail;
 
-    assert(pList);
+    if (pList == NULL || pList->nrNodes == 0)
+    {
+        pTail = NULL;
+    }
+    else
+    {
+        pTail = pList->pTail;
 
-    pNode = dlist_node_construct(sizeof(pList->nodeSize) ,pData, NULL, pList->pHead);
+        pList->pTail = pTail->pNext;
+        pList->nrNodes--;
+    }
 
-    if (dlist_nrNodes(pList) == 0)
+    return pTail;
+}
+
+/*!
+ * Insert the given node at the head of the list.
+ *
+ * The given node must be allocated.
+ * 
+ * The ownership of the given node is given by the caller
+ * to the list.
+ *
+ * \param[in]   pList               List.
+ * \return                          Node to insert, may be NULL.
+ */
+static void dlist_insertHead(dlist *pList, dlist_node *pNode)
+{
+    if (pList == NULL || pNode == NULL)
+    {
+        return;
+    }
+
+    pNode->pNext = NULL;
+    pNode->pPrev = pList->pHead;
+
+    if (pList->nrNodes == 0)
     {
         pList->pTail = pNode;
     }
@@ -187,19 +156,31 @@ void dlist_pushHead(Dlist *pList, void *pData)
     }
     
     pList->pHead = pNode;
-
     pList->nrNodes++;
 }
 
-void dlist_pushTail(Dlist *pList, void *pData)
+/*!
+ * Insert the given node at the tail of the list.
+ *
+ * The given node must be allocated.
+ * 
+ * The ownership of the given node is given by the caller
+ * to the list.
+ *
+ * \param[in]   pList               List.
+ * \return                          Node to insert, may be NULL.
+ */
+static void dlist_insertTail(dlist *pList, dlist_node *pNode)
 {
-    Dlist_node      *pNode;
+    if (pList == NULL || pNode == NULL)
+    {
+        return;
+    }
 
-    assert(pList);
+    pNode->pNext = pList->pTail;
+    pNode->pPrev = NULL;
 
-    pNode = dlist_node_construct(sizeof(pList->nodeSize) , pData, pList->pTail, NULL);
-
-    if (dlist_nrNodes(pList) == 0)
+    if (pList->nrNodes == 0)
     {
         pList->pHead = pNode;
     }
@@ -209,94 +190,337 @@ void dlist_pushTail(Dlist *pList, void *pData)
     }
 
     pList->pTail = pNode;
+    pList->nrNodes++;
+}
+
+/*!
+ * Insert the given node pInsertNode next to pNode.
+ *
+ * The given node must be allocated.
+ * 
+ * The ownership of the given node is given by the caller
+ * to the list.
+ *
+ * \param[in]   pList               List.
+ * \param[in]   pNode               Node.
+ * \param[in]   pInsertNode         Node to insert.
+ */
+static void dlist_insertNextTo(dlist *pList, dlist_node *pNode, dlist_node *pInsertNode)
+{
+    if (pList == NULL || pNode == NULL || pInsertNode == NULL)
+    {
+        return;
+    }
+
+    pInsertNode->pNext = pNode->pNext;
+    pInsertNode->pPrev = pNode;
+
+    if (pNode->pNext == NULL)
+    {
+        pList->pHead = pInsertNode;
+    }
+    else
+    {
+        dlist_node      *pNext;
+    
+        pNext = pNode->pNext;
+        pNext->pPrev = pInsertNode;
+    }
+
+    pNode->pNext = pInsertNode;
 
     pList->nrNodes++;
 }
 
-void dlist_pushAfter(Dlist *pNode, Dlist *pNext)
+/*!
+ * Merge the two given list according to the given comparison function.
+ *
+ * \param[in]   pListA              List A.
+ * \param[in]   pListB              List B.
+ * \param[in]   compare             Comparision function.
+ */
+static void merge(dlist *pListA, dlist *pListB, DListCmpFn compare)
 {
+    dlist_node      *pNodeA;
+    dlist_node      *pNodeB;
+    size_t          listA_nrNodes;
 
+    if (pListA == NULL || pListB == NULL)
+    {
+        return;
+    }
+    
+    if ((pListA->pHead == NULL) || (pListA->nrNodes == 0))
+    {
+        return;
+    }
+
+    if ((pListB->pHead == NULL) || (pListB->nrNodes == 0))
+    {
+        return;
+    }
+
+    //
+    // initialy take both heads of the lists
+    //
+    pNodeA = pListA->pHead;
+    pNodeB = pListB->pHead;
+
+    listA_nrNodes = pListA->nrNodes;
+
+    while (listA_nrNodes > 0 && pListB->nrNodes > 0)
+    {
+        int             result;
+
+        result = compare(pNodeA->pData, pNodeB->pData);
+
+        if (result >= 0)
+        {
+            pNodeB = dlist_takeHead(pListB);
+
+            dlist_insertNextTo(pListA, pNodeA, pNodeB);
+
+            //
+            // actualize the head of the list
+            //
+            pNodeB = pListB->pHead;
+        }
+        else
+        {
+            pNodeA = pNodeA->pPrev;
+            listA_nrNodes--;
+        }
+    }
+
+    //
+    // No list A elements remaining to compare, empty list B
+    // at the tail of list A.
+    //
+    while (pListB->nrNodes > 0)
+    {
+        pNodeB = dlist_takeHead(pListB);
+
+        dlist_insertTail(pListA, pNodeB);
+    }
 }
 
-void dlist_pushBefore(Dlist *pNode, Dlist *pPrev)
+/*!
+ * First part of the mergesort algorithm.
+ *
+ * Split the given list into a series of 1 element list.
+ *
+ * Then compare each list with its adjacent list and merge them
+ * according to the given comparison function.
+ * 
+ * To optimize memory allocation, we allocate only temporary lists
+ * for the "right side". 
+ * 
+ * \param[in]   pList               List to sort.
+ * \param[in]   compare             Comparison function.
+ */
+static void mergesort(dlist *pList, DListCmpFn compare)
 {
+    dlist            *pRightList;
 
+    if ((pList == NULL) || (pList->nrNodes <= 1))
+    {
+        return;
+    }
+
+    pRightList = dlist_init();
+
+    dlist_split(pList, pRightList);
+
+    mergesort(pList, compare);
+    mergesort(pRightList, compare);
+    merge(pList, pRightList, compare);
+
+    dlist_destroy(pRightList);
 }
 
-void dlist_popHead(Dlist *pList, void *pData)
+//----------------------------------------------------------------------------//
+//- Public functions                                                         -//
+//----------------------------------------------------------------------------//
+
+dlist *dlist_init(void)
 {
-    Dlist_node      *pHead;
+    dlist *pList = (dlist*) malloc(sizeof(dlist));
 
-    assert(pList);
-    assert(pList->pHead);
-    assert(pData);
+    pList->pHead        = NULL;
+    pList->pTail        = NULL;
+    pList->nrNodes      = 0;
 
-    pHead = dlist_head(pList);
-    memcpy(pData, pHead->pData, pList->nodeSize);
-    dlist_node_data(pHead, pData);
-
-    pList->pHead = dlist_node_prev(pHead);
-    pList->nrNodes--;
-
-    free(pHead->pData);
-    free(pHead);
+    return pList;
 }
 
-void dlist_popTail(Dlist *pList, void *pData)
+void dlist_destroy(dlist *pList)
 {
-    Dlist_node      *pTail;
+    dlist_node      *pCurrent;
 
-    assert(pList);
-    assert(pList->pTail);
-    assert(pData);
+    if (pList == NULL)
+    {
+        return;
+    }
 
-    pTail = dlist_tail(pList);
-    memcpy(pData, pTail->pData, pList->nodeSize);
-    dlist_node_data(pTail, pData);
+    while (pList->nrNodes != 0)
+    {
+        pCurrent        = pList->pHead;
+        pList->pHead    = pCurrent->pPrev;
 
-    pList->pTail = dlist_node_next(pTail);
-    pList->nrNodes--;
+        pList->nrNodes--;
+        free(pCurrent);
+    }
 
-    free(pTail->pData);
-    free(pTail);
+    free(pList);
 }
 
-void dlist_split(Dlist *pListA, Dlist *pListB)
+void dlist_pushHead(dlist *pList, void *pData)
+{
+    dlist_node      *pNode;
+
+    if (pList == NULL)
+    {
+        return;
+    }
+
+    pNode = dlist_node_init(pData);
+
+    dlist_insertHead(pList, pNode);
+}
+
+void dlist_pushTail(dlist *pList, void *pData)
+{
+    dlist_node      *pNode;
+
+    if (!pList)
+    {
+        return;
+    }
+
+    pNode = dlist_node_init(pData);
+
+    dlist_insertTail(pList, pNode);
+}
+
+void *dlist_popHead(dlist *pList)
+{
+    dlist_node      *pHead = NULL;
+    void            *pData = NULL;
+
+    pHead = dlist_takeHead(pList);
+
+    if (pHead)
+    {
+        pData = pHead->pData;
+
+        free(pHead);
+    }
+
+    return pData;
+}
+
+void *dlist_popTail(dlist *pList)
+{
+    dlist_node      *pTail = NULL;
+    void            *pData = NULL;
+
+    pTail = dlist_takeTail(pList);
+
+    if (pTail)
+    {
+        pData = pTail->pData;
+
+        free(pTail);
+    }
+
+    return pData;
+}
+
+void printList(dlist *pList)
+{
+    uint32_t	*res;
+    dlist_node *pHead;
+
+    if (pList == NULL)
+    {
+        return;
+    }
+    
+    pHead = pList->pHead;
+
+    while(pHead != NULL)
+    {
+        res = pHead->pData;
+        printf("%u ", *res);
+        pHead = pHead->pPrev;
+    }
+    printf("\n");
+}
+
+void dlist_split(dlist *pListA, dlist *pListB)
 {
     size_t	midList;
-    Dlist_node *pMidNode;
-    Dlist_node *pPrev;
+    dlist_node *pMidNode;
+    dlist_node *pPrev;
 
-    assert(pListA);
-    assert(pListB);
-    assert(pListA->nodeSize == pListB->nodeSize);
+    if (!pListA || !pListB)
+    {
+        return;
+    }
 
     midList 		= pListA->nrNodes / 2;
     
     pMidNode	= dlist_getNode(pListA, midList);
-    pPrev	= dlist_node_prev(pMidNode);
 
-    pPrev->pNext	 = NULL;
-    pListB->pHead        = pPrev;
-    pListB->pTail        = pListA->pTail;
-    pListB->nrNodes      = pListA->nrNodes - midList;
+    if (pMidNode)
+    {
+        pPrev	= pMidNode->pPrev;
 
-    pMidNode->pPrev	 = NULL;
-    pListA->pTail        = pMidNode;
-    pListA->nrNodes      = midList;
+        pPrev->pNext	 = NULL;
+        pListB->pHead        = pPrev;
+        pListB->pTail        = pListA->pTail;
+        pListB->nrNodes      = pListA->nrNodes - midList;
+
+        pMidNode->pPrev	 = NULL;
+        pListA->pTail        = pMidNode;
+        pListA->nrNodes      = midList;
+    }
+    else
+    {
+        pListB->pHead        = NULL;
+        pListB->pTail        = NULL;
+        pListB->nrNodes      = 0;
+    }
 }
 
-void dlist_join(Dlist *pListA, Dlist *pListB)
+void dlist_join(dlist *pDstList, dlist *pSrcList)
 {
-    assert(pListA);
-    assert(pListB);
-    assert(pListA->nodeSize == pListB->nodeSize);
+    if (!pDstList || !pSrcList)
+    {
+        return;
+    }
 
-   pListB->pHead->pNext	= pListA->pTail;
-   pListA->pTail->pPrev	= pListB->pHead;
-   pListA->nrNodes	+= pListB->nrNodes;
+   pDstList->pTail->pPrev	= pSrcList->pHead;
+   pSrcList->pHead->pNext   = pDstList->pTail;
+   pDstList->pTail          = pSrcList->pTail;
+   pDstList->nrNodes	    += pSrcList->nrNodes;
 
-   pListB->pHead	= NULL;
-   pListB->pTail	= NULL;
-   pListB->nrNodes	= 0;
+   pSrcList->pHead	= NULL;
+   pSrcList->pTail	= NULL;
+   pSrcList->nrNodes	= 0;
+}
+
+void dlist_sort(dlist *pList, DListCmpFn cmp)
+{
+    if (pList == NULL)
+    {
+        return;
+    }
+
+    if (cmp == NULL)
+    {
+        return;
+    }
+
+    mergesort(pList, cmp);
 }
