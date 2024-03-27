@@ -22,6 +22,8 @@
 // Personal library headers
 #include <dlist.h>
 #include <slist.h>
+#include <stack.h>
+#include <queue.h>
 
 //----------------------------------------------------------------------------//
 //- Macro definitions                                                        -//
@@ -37,5 +39,18 @@
             keep && count != size;                          \
             keep = !keep, count++)                          \
       for (item = (array) + count; keep; keep = !keep)
+
+//----------------------------------------------------------------------------//
+//- Structure                                                                -//
+//----------------------------------------------------------------------------//
+
+/*!
+ * Point structure.
+ */
+typedef struct _point
+{
+    int     x;
+    int     y;
+} point;
 
 #endif // STANDARD_H

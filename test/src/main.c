@@ -2,19 +2,10 @@
 #include <standard.h>
 
 //----------------------------------------------------------------------------//
-//- Forward declaration                                                      -//
+//- Private functions                                                        -//
 //----------------------------------------------------------------------------//
 
-void test_slist(void);
-void test_dlist(void);
-void test_dlist_mergesort(DListCmpFn cmp);
-int compare(const void *pOne, const void *pTwo);
-
-//----------------------------------------------------------------------------//
-//- Public functions                                                         -//
-//----------------------------------------------------------------------------//
-
-void test_slist(void)
+static void test_slist(void)
 {
 	slist		*pList;
 	uint32_t	*res;
@@ -42,7 +33,7 @@ void test_slist(void)
 	slist_destroy(pList);
 }
 
-void test_dlist(void)
+static void test_dlist(void)
 {
 	dlist		*pList;
 	dlist		*pListB;
@@ -106,7 +97,7 @@ void test_dlist(void)
 	dlist_destroy(pListB);
 }
 
-void test_dlist_mergesort(DListCmpFn cmp)
+static void test_dlist_mergesort(DListCmpFn cmp)
 {
 	dlist		*pList;
 	uint32_t	data[] = { 1, 17, 6, 9, 198, 184, 1, 6, 0, 4896, 49746, 4154 , 18, 19, 487, 648, 3, 55, 41, 69, 154, 964, 841, 57, 12 };
@@ -122,13 +113,12 @@ void test_dlist_mergesort(DListCmpFn cmp)
 	
 	dlist_sort(pList, cmp);
 
-	printf("\nsorted list: head:0x%x: %d\t tail:0x%x: %d\t nr:%d\n", pList->pHead, *(uint32_t*)pList->pHead->pData, pList->pTail, *(uint32_t*)pList->pTail->pData, pList->nrNodes);
 	printList(pList);
 
 	dlist_destroy(pList);
 }
 
-int compare(const void *pOne, const void *pTwo)
+static int compare(const void *pOne, const void *pTwo)
 {
 	if (*(uint32_t*)pOne < *(uint32_t*)pTwo)
 	{
@@ -140,16 +130,72 @@ int compare(const void *pOne, const void *pTwo)
 	}
 }
 
+static void test_stack(void)
+{
+	uint32_t	data[] = { 1, 17, 6, 9, 198, 184, 1, 6, 0, 4896, 49746, 4154 , 18, 19, 487, 648, 3, 55, 41, 69, 154, 964, 841, 57, 12 };
+	stack 		*pStack;
+	uint32_t 	*res;
+
+	pStack = stack_init();
+
+	printf("\nstack:\n");
+	for (size_t i = 0; i < ARRAY_SIZE(data); i++)
+	{
+		printf("%u ", data[i]);
+		stack_push(pStack, &data[i]);
+	}
+
+	printf("\npop stack:\n");
+	while ((res = stack_pop(pStack)) != NULL)
+	{
+		printf("%u ", *res);
+	}
+
+	stack_destroy(pStack);
+}
+
+static void test_queue(void)
+{
+	uint32_t	data[] = { 1, 17, 6, 9, 198, 184, 1, 6, 0, 4896, 49746, 4154 , 18, 19, 487, 648, 3, 55, 41, 69, 154, 964, 841, 57, 12 };
+	queue 		*pQueue;
+	uint32_t 	*res;
+
+	pQueue = queue_init();
+
+	printf("\nqueue:\n");
+	for (size_t i = 0; i < ARRAY_SIZE(data); i++)
+	{
+		printf("%u ", data[i]);
+		queue_enqueue(pQueue, &data[i]);
+	}
+
+	printf("\ndequeue:\n");
+	while ((res = queue_dequeue(pQueue)) != NULL)
+	{
+		printf("%u ", *res);
+	}
+
+	queue_destroy(pQueue);
+}
+
+//----------------------------------------------------------------------------//
+//- Public functions                                                         -//
+//----------------------------------------------------------------------------//
+
 int main(int argc, char **argv)
 {
 	(void)(argc);
 	(void)(argv);
 
-	test_slist();
+	//test_slist();
 
-	test_dlist();
+	//test_dlist();
 
-	test_dlist_mergesort(compare);
+	//test_dlist_mergesort(compare);
+
+	test_stack();
+
+	test_queue();
 
 	system("pause");
 	return 0;
